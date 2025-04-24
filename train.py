@@ -72,7 +72,7 @@ def train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_s
             optimizer.step()
             scheduler.step()
 
-            if i % 100 == 0:
+            if (i < 1000 and epoch == 0) or i % 100 == 0: # Print out the early steps, for testing purposes, then only print loss every 100 steps
                 print(f"Epoch {epoch} | Step {i} | Train Loss: {loss.item():.4f}")
 
         # === Validation ===
