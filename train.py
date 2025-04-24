@@ -91,19 +91,22 @@ class NoiseScheduler:
 
     def q_sample(self, x_start, t, noise):
         """Diffusion forward process."""
-        a_bar = self.alpha_bars[t].view(-1, 1, 1, 1).to(x_start.device)
+        a_bar = self.alpha_bars.to(x_start.device)[t].view(-1, 1, 1, 1)
         return torch.sqrt(a_bar) * x_start + torch.sqrt(1 - a_bar) * noise
 
 # === Usage ===
 if __name__ == "__main__":
     from network import UNet
 
-    dataset = InpaintingDataset("input_images/train")
-    dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=4)
+    train_dataset = InpaintingDataset("/blue/aosmith1/logan.boehm/processed_texture_dataset/train")
+    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4)
+
+    val_dataset = InpaintingDataset("/blue/aosmith1/logan.boehm/processed_texture_dataset/val")
+    val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True, num_workers=4)
 
     model = UNet()
     optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=1000)
     noise_scheduler = NoiseScheduler()
 
-    train(model, dataloader, optimizer, scheduler, noise_scheduler, epochs=20)
+    train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_scheduler, epochs=20)
