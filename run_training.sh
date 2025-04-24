@@ -7,7 +7,7 @@
 #ASBATCH --mail-user=lboehm2020@my.fit.edu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --time=60:00:00
 #SBATCH --mem=40GB
 
@@ -36,7 +36,7 @@ MONITOR_PID=$!
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate pose-rec
 
-python3 train.py
+python3 -u train.py
 
 echo "Done!"
 
