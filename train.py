@@ -61,6 +61,7 @@ def train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_s
             optimizer.step()
             scheduler.step()
 
+            print(f"Epoch {epoch} | Step {i} | Train Loss: {loss.item():.4f}")
             if i % 100 == 0:
                 print(f"Epoch {epoch} | Step {i} | Train Loss: {loss.item():.4f}")
 
@@ -99,10 +100,10 @@ if __name__ == "__main__":
     from network import UNet
 
     train_dataset = InpaintingDataset("/blue/aosmith1/logan.boehm/processed_texture_dataset/train")
-    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4)
+    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=2)
 
     val_dataset = InpaintingDataset("/blue/aosmith1/logan.boehm/processed_texture_dataset/val")
-    val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True, num_workers=4)
+    val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True, num_workers=2)
 
     model = UNet()
     optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4)
