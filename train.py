@@ -61,7 +61,8 @@ def train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_s
 
             noised = noised * mask + target * (1 - mask)
             pred = model(torch.cat([noised * (1 - mask), mask], dim=1), t)
-            loss = F.mse_loss(pred, noise)
+            # loss = F.mse_loss(pred, noise)
+            loss = F.mse_loss(pred * mask, noise * mask, reduction='sum') / mask.sum()
 
             optimizer.zero_grad()
             loss.backward()
