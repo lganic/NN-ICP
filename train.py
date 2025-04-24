@@ -28,9 +28,16 @@ class InpaintingDataset(Dataset):
         mask = torch.zeros_like(image[:1])  # [1, H, W]
         # Random block mask (box)
         h, w = image.shape[1:]
-        mh, mw = random.randint(h // 4, h // 2), random.randint(w // 4, w // 2)
-        top, left = random.randint(0, h - mh), random.randint(0, w - mw)
-        mask[:, top:top + mh, left:left + mw] = 1
+
+        num_rects = random.randint(3, 7)  # Choose how many rectangles per image
+
+        for _ in range(num_rects):
+            # Small rectangles: size 1/16 to 1/8 of the image
+            mh = random.randint(h // 10, h // 6)
+            mw = random.randint(w // 10, w // 6)
+            top = random.randint(0, h - mh)
+            left = random.randint(0, w - mw)
+            mask[:, top:top + mh, left:left + mw] = 1
 
         # Combine image + mask into 4 channels
         masked_image = image.clone()
