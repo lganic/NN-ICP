@@ -131,31 +131,31 @@ class UNet(nn.Module):
 
 
 
+if __name__ == '__main__':
+    import torch
+    from torchvision.utils import save_image
+    import os
 
-import torch
-from torchvision.utils import save_image
-import os
+    # === Instantiate the model ===
+    model = UNet(in_channels=4, out_channels=3)
+    model.eval()
 
-# === Instantiate the model ===
-model = UNet(in_channels=4, out_channels=3)
-model.eval()
+    # === Dummy input ===
+    B, H, W = 1, 256, 256
+    image = torch.randn(B, 3, H, W)
+    mask = torch.randint(0, 2, (B, 1, H, W))
+    timestep = torch.randint(0, 1000, (B,))
 
-# === Dummy input ===
-B, H, W = 1, 256, 256
-image = torch.randn(B, 3, H, W)
-mask = torch.randint(0, 2, (B, 1, H, W))
-timestep = torch.randint(0, 1000, (B,))
+    # === Combine and run ===
+    input_tensor = torch.cat([image, mask], dim=1)
 
-# === Combine and run ===
-input_tensor = torch.cat([image, mask], dim=1)
+    with torch.no_grad():
+        output = model(input_tensor, timestep)
 
-with torch.no_grad():
-    output = model(input_tensor, timestep)
+    # === Normalize output to [0, 1] just for visualization ===
+    output_vis = (output - output.min()) / (output.max() - output.min() + 1e-8)
 
-# === Normalize output to [0, 1] just for visualization ===
-output_vis = (output - output.min()) / (output.max() - output.min() + 1e-8)
-
-# === Save ===
-os.makedirs("output_images", exist_ok=True)
-save_image(output_vis, "output_images/unet_output.png")
-print("Saved to output_images/unet_output.png")
+    # === Save ===
+    os.makedirs("output_images", exist_ok=True)
+    save_image(output_vis, "output_images/unet_output.png")
+    print("Saved to output_images/unet_output.png")
