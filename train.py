@@ -26,7 +26,6 @@ class InpaintingDataset(Dataset):
         image = self.transform(image)  # [C, H, W]
 
         mask = torch.zeros_like(image[:1])  # [1, H, W]
-        # Random block mask (box)
         h, w = image.shape[1:]
 
         num_rects = random.randint(3, 7)  # Choose how many rectangles per image
@@ -50,6 +49,10 @@ class InpaintingDataset(Dataset):
 def train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_scheduler, epochs=10, device="cuda"):
     model.to(device)
 
+    print('Shape test:')
+    x, y, mask = next(iter(train_dataloader))
+    print(x.shape, y.shape, mask.shape)
+
     for epoch in range(epochs):
         model.train()
         for i, (x, target, mask) in enumerate(train_dataloader):
@@ -69,7 +72,6 @@ def train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_s
             optimizer.step()
             scheduler.step()
 
-            print(f"Epoch {epoch} | Step {i} | Train Loss: {loss.item():.4f}")
             if i % 100 == 0:
                 print(f"Epoch {epoch} | Step {i} | Train Loss: {loss.item():.4f}")
 
@@ -89,6 +91,10 @@ def train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_s
         val_loss /= len(val_dataloader.dataset)
         print(f"Epoch {epoch} | Validation Loss: {val_loss:.4f}")
 
+        save_path = f"checkpoint_epoch_{epoch+1}.pt"
+        torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pt")
+        print(f"Saved checkpoint: {save_path}")
+
 
 # === Noise Scheduler ===
 class NoiseScheduler:
@@ -107,15 +113,22 @@ class NoiseScheduler:
 if __name__ == "__main__":
     from network import UNet
 
+    print('Loading training dataset')
     train_dataset = InpaintingDataset("/blue/aosmith1/logan.boehm/processed_texture_dataset/train")
-    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=2)
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
 
+    print('Loading validation dataset')
     val_dataset = InpaintingDataset("/blue/aosmith1/logan.boehm/processed_texture_dataset/val")
-    val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True, num_workers=2)
+    val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=True, num_workers=4)
 
+    print(f"Train dataset size: {len(train_dataloader.dataset)}")
+    print(f"Val dataset size: {len(val_dataloader.dataset)}")
+
+    print('Initializing model')
     model = UNet()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=4e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=1000)
     noise_scheduler = NoiseScheduler()
 
+    print('Beginning training')
     train(model, train_dataloader, val_dataloader, optimizer, scheduler, noise_scheduler, epochs=20)
