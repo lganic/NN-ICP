@@ -1,0 +1,4 @@
+logs/*
+gpu_usage.log
+*.pyc
+*.png
